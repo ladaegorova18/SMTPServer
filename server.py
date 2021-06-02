@@ -9,7 +9,7 @@ port = 25
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Привязываем сокет к порту
-server_address = ('localhost', port)
+server_address = ("84.252.139.161", port)
 print('Старт сервера на {} порт {}'.format(*server_address))
 sock.bind(server_address)
 
@@ -26,8 +26,7 @@ def storeLetter(sender_mail, sender_name, address_name, info, text, count):
         letter = letter + info + "\n"
     letter += text
 
-    path = "C:/Users/Home/Documents"
-    os.chdir(path)
+    path = os.curdir
     if not os.path.exists("Mail"):
         os.mkdir(path + "/Mail")
     os.chdir("Mail")
@@ -91,4 +90,3 @@ while True:
     finally:
         # Очищаем соединение
         connection.close()
-

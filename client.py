@@ -1,5 +1,4 @@
 import socket
-import sys
 
 port = 25
 
