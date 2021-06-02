@@ -9,7 +9,7 @@ port = 25
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Привязываем сокет к порту
-server_address = ("84.252.139.161", port)
+server_address = ("localhost", port)
 print('Старт сервера на {} порт {}'.format(*server_address))
 sock.bind(server_address)
 
