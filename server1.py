@@ -10,15 +10,12 @@ port = 25
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Привязываем сокет к порту
-server_address = ("localhost", port)
+server_address = ("0.0.0.0", port)
 print('Старт сервера на {} порт {}'.format(*server_address))
 sock.bind(server_address)
 
 # Слушаем входящие подключения
-sock.listen(1)
-
-
-def clientHandler(client, count):
+def clientHandler(connection, count):
     sender_name = ""
     sender_mail = ""
     address_name = ""
@@ -30,41 +27,62 @@ def clientHandler(client, count):
     try:
         while True:
             message = connection.recv(512).decode()
-            print(f'Получено: {message}')
+
+            if message != "" and message != "\n":
+                print(f'Получено: {message}')
 
             if message.startswith("QUIT"):
                 mess = "221 Bye!"
                 connection.send(mess.encode())
+                connection.close()
                 break
 
-            elif message.startswith("HELO") :
+            elif message.lower() == "helo" or message.lower() == "mail from" or message.lower() == "rcpt to":
+                mess = "Please enter info"
+                connection.send(mess.encode())
+
+            elif message.lower().startswith("helo"):
                 sender_name = message[4:]  # обрезать
                 mess = "250 OK"
-
-            elif message.startswith("MAIL FROM"):
-                sender_mail = message[10:]
-                mess = "250 OK"
-
-            elif message.startswith("RCPT TO"):
-                address_name = message[8:]
-                mess = "250 OK"
-
-            elif message.startswith("DATA"):
-                info = message[4:]
-                mess = "354 Send message content"
                 connection.send(mess.encode())
-                data = connection.recv(4096)
-                text = data.decode()
+
+            elif message.lower().startswith("mail from:"):
+                sender_mail = message[10:]  # обрезать
                 mess = "250 OK"
-                storeLetter(sender_mail, sender_name, address_name, info, text, count)
-                count += 1
+                connection.send(mess.encode())
+
+            elif message.lower().startswith("rcpt to:"):
+                address_name = message[8:]  # обрезать
+                mess = "250 OK"
+                connection.send(mess.encode())
+
+            elif message.lower().startswith("data"):
+                if address_name == "" or sender_name == "" or sender_mail == "":
+                    mess = "Sender name, sender mail and address can not be empty"
+                    connection.send(mess.encode())
+
+                else:
+                    info = message[4:]
+                    mess = "354 Send message content, ending with \".\""
+                    connection.send(mess.encode())
+                    data = connection.recv(4096)
+                    while not data.endswith(".".encode()):
+                        connection.send(mess.encode())
+                        data += connection.recv(4096)
+                    text = data.decode()
+                    mess = "250 OK"
+                    storeLetter(sender_mail, sender_name, address_name, info, text, count)
+                    count += 1
+                    connection.send(mess.encode())
 
             else:
                 mess = "Invalid data"
-            connection.send(mess.encode())
+                connection.send(mess.encode())
 
-    except Exception:
-        print("Exception occured")
+    except Exception as exp:
+        print(exp)
+        if sender_mail != "" and sender_name != "" and address_name != "" and text != "":
+            storeLetter(sender_mail, sender_name, address_name, info, text, count)
 
     finally:
         connection.close()
@@ -89,6 +107,7 @@ def storeLetter(sender_mail, sender_name, address_name, info, text, count):
         file.write(letter)
 
 
+sock.listen(5)
 while True:
     try:
         # ждем соединения
@@ -99,4 +118,4 @@ while True:
         Thread(target=clientHandler(connection, count)).start()
     finally:
         # Очищаем соединение
-        connection.close()
+        sock.close()

@@ -4,6 +4,13 @@ from threading import Thread
 
 port = 25
 
+def awaitAnswer():
+    # Смотрим ответ
+    data = sock.recv(512)
+    answer = data.decode().replace('\n', '')
+    print(f'Received: {answer}')
+
+
 # СоздаемTCP/IP сокет
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # 84.252.138.83
@@ -15,24 +22,15 @@ data = sock.recv(512)
 answer = data.decode().replace('\n', '')
 print(f'Received: {answer}')
 
-def awaitAnswer():
-    # Смотрим ответ
-    data = sock.recv(512)
-    answer = data.decode().replace('\n', '')
-    print(f'Received: {answer}')
-
 
 try:
     while True:
         # Отправка данных
-        mess = input().split("\n")
+        mess = input()
         if mess != '' and mess != '\n':
-            for line in mess:
-                sock.sendall(line.encode())
-
+            sock.sendall(mess.encode())
 
         print(f'Sent: {mess}')
-
         Thread(target=awaitAnswer()).start()
 
 finally:
