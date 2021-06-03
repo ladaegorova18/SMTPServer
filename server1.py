@@ -10,7 +10,7 @@ port = 25
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Привязываем сокет к порту
-server_address = ("localhost", port)
+server_address = ("10.129.0.6", port)
 print('Старт сервера на {} порт {}'.format(*server_address))
 sock.bind(server_address)
 
@@ -33,21 +33,21 @@ def clientHandler(client, count):
             print(f'Получено: {message}')
 
             if message.startswith("QUIT"):
-                mess = "221 Bye!"
+                mess = "221 Bye! \n"
                 connection.send(mess.encode())
                 break
 
             elif message.startswith("HELO") :
                 sender_name = message[4:]  # обрезать
-                mess = "250 OK"
+                mess = "250 OK \n"
 
             elif message.startswith("MAIL FROM"):
                 sender_mail = message[10:]
-                mess = "250 OK"
+                mess = "250 OK \n"
 
             elif message.startswith("RCPT TO"):
                 address_name = message[8:]
-                mess = "250 OK"
+                mess = "250 OK \n"
 
             elif message.startswith("DATA"):
                 info = message[4:]
@@ -55,12 +55,12 @@ def clientHandler(client, count):
                 connection.send(mess.encode())
                 data = connection.recv(4096)
                 text = data.decode()
-                mess = "250 OK"
+                mess = "250 OK \n"
                 storeLetter(sender_mail, sender_name, address_name, info, text, count)
                 count += 1
 
             else:
-                mess = "Invalid data"
+                mess = "Invalid data \n"
             connection.send(mess.encode())
 
     except Exception:
