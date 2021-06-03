@@ -32,7 +32,7 @@ def clientHandler(connection, count):
                 print(f'Получено: {message}')
 
             if message.startswith("QUIT"):
-                mess = "221 Bye!"
+                mess = "221 Bye! \n"
                 connection.send(mess.encode())
                 connection.close()
                 break
@@ -43,41 +43,29 @@ def clientHandler(connection, count):
 
             elif message.lower().startswith("helo"):
                 sender_name = message[4:]  # обрезать
-                mess = "250 OK"
+                mess = "250 OK \n"
+
+            elif message.startswith("MAIL FROM"):
+                sender_mail = message[10:]
+                mess = "250 OK \n"
+
+            elif message.startswith("RCPT TO"):
+                address_name = message[8:]
+                mess = "250 OK \n"
+
+            elif message.startswith("DATA"):
+                info = message[4:]
+                mess = "354 Send message content"
                 connection.send(mess.encode())
-
-            elif message.lower().startswith("mail from:"):
-                sender_mail = message[10:]  # обрезать
-                mess = "250 OK"
-                connection.send(mess.encode())
-
-            elif message.lower().startswith("rcpt to:"):
-                address_name = message[8:]  # обрезать
-                mess = "250 OK"
-                connection.send(mess.encode())
-
-            elif message.lower().startswith("data"):
-                if address_name == "" or sender_name == "" or sender_mail == "":
-                    mess = "Sender name, sender mail and address can not be empty"
-                    connection.send(mess.encode())
-
-                else:
-                    info = message[4:]
-                    mess = "354 Send message content, ending with \".\""
-                    connection.send(mess.encode())
-                    data = connection.recv(4096)
-                    while not data.endswith(".".encode()):
-                        connection.send(mess.encode())
-                        data += connection.recv(4096)
-                    text = data.decode()
-                    mess = "250 OK"
-                    storeLetter(sender_mail, sender_name, address_name, info, text, count)
-                    count += 1
-                    connection.send(mess.encode())
+                data = connection.recv(4096)
+                text = data.decode()
+                mess = "250 OK \n"
+                storeLetter(sender_mail, sender_name, address_name, info, text, count)
+                count += 1
 
             else:
-                mess = "Invalid data"
-                connection.send(mess.encode())
+                mess = "Invalid data \n"
+            connection.send(mess.encode())
 
     except Exception as exp:
         print(exp)
